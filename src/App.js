@@ -1,59 +1,83 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
-function App() {
+const SHEET_ID = "Wallet Info (Sorted by VTRS)";
+const API_KEY = "AIzaSyBhq-pML61rTXq9VRI3qduRqa4KIdDReA4";
+const RANGE = "A:Q"; // Fetch only columns A to Q
+const URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+
+const App = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQV0Qjm7k6EaeIvyvEKbLoti-F_abvF3D4iVNrzXGxSXFPRkbHghwueDWz7IjG-SnzOSGX8qIjRorjQ/pub?gid=1972655678&single=true&output=csv") // Replace with your published CSV URL
-      .then((response) => response.text())
-      .then((text) => {
-        const rows = text.split("\n").map((row) => row.split(","));
-        setData(rows);
+    fetch(URL)
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data.values || []); // Ensure data is formatted properly
         setLoading(false);
       })
-      .catch((error) => console.error("Error fetching data:", error));
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      });
   }, []);
 
-  const filteredData = data.filter((row) =>
-    row.some((cell) => cell.toLowerCase().includes(search.toLowerCase()))
-  );
+  const formatNumber = (value) => {
+    return !isNaN(value) && value !== "" ? Number(value).toLocaleString() : value;
+  };
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    backgroundColor: "#1e1e1e", // Dark theme
+    color: "#ffffff", // White text
+  };
+
+  const thStyle = {
+    backgroundColor: "#333",
+    padding: "10px",
+    borderBottom: "2px solid #555",
+    textAlign: "left",
+  };
+
+  const tdStyle = {
+    padding: "10px",
+    borderBottom: "1px solid #444",
+    textAlign: "left",
+    minWidth: "100px", // Ensures consistent width
+    maxWidth: "200px", // Prevents excessive stretching
+    whiteSpace: "nowrap", // Prevents multi-line wrapping
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  };
+
+  if (loading) {
+    return <div style={{ color: "#ffffff", textAlign: "center", padding: "20px" }}>Loading...</div>;
+  }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Blockchain Dashboard</h1>
-      <input
-        type="text"
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: "10px", marginBottom: "20px", width: "100%" }}
-      />
-      {loading ? (
-        <p>Loading data...</p>
-      ) : (
-        <table border="1" width="100%">
-          <thead>
-            <tr>
-              {data[0].map((header, index) => (
-                <th key={index}>{header}</th>
+    <div style={{ padding: "20px", backgroundColor: "#121212", minHeight: "100vh" }}>
+      <h2 style={{ color: "#ffffff", textAlign: "center" }}>Wallet Info Dashboard</h2>
+      <table style={tableStyle}>
+        <thead>
+          <tr>
+            {data[0].map((header, index) => (
+              <th key={index} style={thStyle}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.slice(1).map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex} style={tdStyle}>{formatNumber(cell)}</td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {filteredData.slice(1).map((row, index) => (
-              <tr key={index}>
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
 
 export default App;
