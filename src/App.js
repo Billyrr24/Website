@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 const SHEET_ID = "Wallet Info (Sorted by VTRS)";
-const API_KEY = "AIzaSyBhq-pML61rTXq9VRI3qduRqa4KIdDReA4";
+const API_KEY = "";
 const RANGE = "A:Q"; // Fetch only columns A to Q
 const URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
